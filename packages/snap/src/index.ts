@@ -15,17 +15,12 @@ export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
   switch (request.method) {
     case 'hello':
       return snap.request({
-        method: 'snap_dialog',
+        method: 'snap_notify',
         params: {
-          type: 'confirmation',
-          content: panel([
-            text(`Hello, **${origin}**!`),
-            text('This custom confirmation is just for display purposes.'),
-            text(
-              'But you can edit the snap source code to make it do something, if you want to!',
-            ),
-          ]),
+          type: 'native',
+          message: `Hello from ${panel.name}!`,
         },
+
       });
     default:
       throw new Error('Method not found.');
