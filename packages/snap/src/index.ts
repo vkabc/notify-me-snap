@@ -3,31 +3,24 @@ import { panel, text, heading } from '@metamask/snaps-ui';
 
 import { rpcErrors } from '@metamask/rpc-errors';
 import type { OnCronjobHandler } from '@metamask/snaps-types';
-/**
- * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
- *
- * @param args - The request handler args as object.
- * @param args.origin - The origin of the request, e.g., the website that
- * invoked the snap.
- * @param args.request - A validated JSON-RPC request object.
- * @returns The result of `snap_dialog`.
- * @throws If the request method is not valid for this snap.
- */
-export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
-  switch (request.method) {
-    case 'hello':
-      return snap.request({
-        method: 'snap_notify',
-        params: {
-          type: 'native',
-          message: `Hello from ${panel.name}!`,
-        },
 
-      });
-    default:
-      throw new Error('Method not found.');
-  }
-};
+/**
+ * Handle incoming JSON-RPC requests from the dapp, sent through the
+ * `wallet_invokeSnap` method. This handler handles a single method:
+ *
+ * - `fetch`: Fetch a JSON document from the provided URL. This demonstrates
+ * that a snap can make network requests through the `fetch` function. Note that
+ * the `endowment:network-access` permission must be enabled for this to work.
+ *
+ * @param params - The request parameters.
+ * @param params.request - The JSON-RPC request object.
+ * @returns The JSON-RPC response.
+ * @see https://docs.metamask.io/snaps/reference/exports/#onrpcrequest
+ * @see https://docs.metamask.io/snaps/reference/rpc-api/#wallet_invokesnap
+ * @see https://docs.metamask.io/snaps/reference/permissions/#endowmentnetwork-access
+ */
+
+import type { FetchParams } from './types';
 
 
 /**
@@ -46,18 +39,62 @@ export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
  */
 
 
-export const onCronjob: OnCronjobHandler = async ({ request }) => {
+// export const onCronjob: OnCronjobHandler = async ({ request }) => {
+//   switch (request.method) {
+//     case 'execute':
+//       return snap.request({
+//         method: 'snap_notify',
+//         params: {
+//           type: 'native',
+//           message: `Hello, world!`,
+//         },
+//       });
+//
+//     default:
+//       throw new Error('Method not found.');
+//   }
+// };
+/**
+ * Fetch a JSON file from the provided URL. This uses the standard `fetch`
+ * function to get the JSON data. Because of CORS, the server must respond with
+ * an `Access-Control-Allow-Origin` header set to either `*` or `null`.
+ *
+ * Note that `fetch` is only available with the `endowment:network-access`
+ * permission.
+ *
+ * @param url - The URL to fetch the data from. This function assumes that the
+ * provided URL is a JSON document. Defaults to
+ * `https://metamask.github.io/snaps/test-snaps/latest/test-data.json`.
+ * @returns There response as JSON.
+ * @throws If the provided URL is not a JSON document.
+ */
+async function getJson() {
+  const response = await fetch('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR');
+  return await response.json();
+}
+
+export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   switch (request.method) {
-    case 'execute':
+    case 'hello': {
+      const params = request.params as FetchParams | undefined;
+      console.log((await getJson()));
+
       return snap.request({
-        method: 'snap_notify',
-        params: {
-          type: 'native',
-          message: `Hello, world!`,
+          method: 'snap_notify',
+          params: {
+            type: 'native',
+            message: ((await getJson(params?.url)).USD).toString(),
+          },
+
         },
-      });
+      );
+    }
 
     default:
-      throw new Error('Method not found.');
+      throw rpcErrors.methodNotFound({
+        data: {
+          method: request.method,
+        },
+      });
   }
 };
