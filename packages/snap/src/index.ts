@@ -76,14 +76,12 @@ async function getJson() {
 export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   switch (request.method) {
     case 'hello': {
-      const params = request.params as FetchParams | undefined;
-      console.log((await getJson()));
-
       return snap.request({
           method: 'snap_notify',
           params: {
             type: 'native',
-            message: ((await getJson(params?.url)).USD).toString(),
+            // message: ((await getJson()).USD).toString(),
+            message: request.params.to,
           },
 
         },

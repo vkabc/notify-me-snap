@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import styled from 'styled-components';
 import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
@@ -14,6 +14,7 @@ import {
   SendHelloButton,
   Card,
 } from '../components';
+import { InputPlaceholder } from '../components/Input';
 
 const Container = styled.div`
   display: flex;
@@ -117,14 +118,23 @@ const Index = () => {
     }
   };
 
+  const [data, setData] = useState({
+    threshold: '',
+  });
+  const sendData = (data) => {
+    console.log(data)
+    setData(data)
+  }
+
   const handleSendHelloClick = async () => {
     try {
-      await sendHello();
+      await sendHello(data.threshold);
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
+
 
   return (
     <Container>
@@ -194,6 +204,7 @@ const Index = () => {
                 disabled={!state.installedSnap}
               />
             ),
+            input: <InputPlaceholder setThreshold={sendData}/>,
           }}
           disabled={!state.installedSnap}
           fullWidth={
