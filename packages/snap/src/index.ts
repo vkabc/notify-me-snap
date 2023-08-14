@@ -39,21 +39,6 @@ import type { FetchParams } from './types';
  */
 
 
-// export const onCronjob: OnCronjobHandler = async ({ request }) => {
-//   switch (request.method) {
-//     case 'execute':
-//       return snap.request({
-//         method: 'snap_notify',
-//         params: {
-//           type: 'native',
-//           message: `Hello, world!`,
-//         },
-//       });
-//
-//     default:
-//       throw new Error('Method not found.');
-//   }
-// };
 /**
  * Fetch a JSON file from the provided URL. This uses the standard `fetch`
  * function to get the JSON data. Because of CORS, the server must respond with
@@ -76,16 +61,12 @@ async function getJson() {
 export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
   switch (request.method) {
     case 'hello': {
-      return snap.request({
-          method: 'snap_notify',
-          params: {
-            type: 'native',
-            // message: ((await getJson()).USD).toString(),
-            message: request.params.to,
-          },
 
-        },
-      );
+      await snap.request({
+        method: 'snap_manageState',
+        params: { operation: 'update', newState: { threshold: request.params.to } },
+      });
+      break;
     }
 
     default:
@@ -94,5 +75,43 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
           method: request.method,
         },
       });
+  }
+};
+
+export const onCronjob: OnCronjobHandler = async ({ request }) => {
+  switch (request.method) {
+    case 'execute':
+      // At a later time, get the data stored.
+
+     const data = await snap.request({
+        method: 'snap_manageState',
+        params: { operation: 'get' },
+      });
+     if("threshold" in data){
+       return snap.request({
+           method: 'snap_notify',
+           params: {
+             type: 'native',
+             message: `threshold is ${data.threshold}`,
+           },
+
+         },
+       );
+     }
+     else{
+        return snap.request({
+            method: 'snap_notify',
+            params: {
+              type: 'native',
+              message: `no threshold set`,
+            },
+
+          },
+        );
+     }
+
+
+    default:
+      throw new Error('Method not found.');
   }
 };

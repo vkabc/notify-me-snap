@@ -122,7 +122,6 @@ const Index = () => {
     threshold: '',
   });
   const sendData = (data) => {
-    console.log(data)
     setData(data)
   }
 
