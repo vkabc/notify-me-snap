@@ -98,7 +98,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
 
     case 'toggle_stop': {
       if (request.params.to) {
-        if ('stop' in currentState && currentState.stop) {
+        if (currentState && 'stop' in currentState && currentState.stop) {
           await snap.request({
             method: 'snap_manageState',
             params: {

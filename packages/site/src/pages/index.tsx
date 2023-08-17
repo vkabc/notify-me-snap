@@ -215,6 +215,7 @@ const Index = () => {
             input: <InputPlaceholder setThreshold={sendData} />,
             toggle: (
               <ToggleGeneric
+                shouldLoad={state.installedSnap}
                 onToggle={async () => {
                   try {
                      console.log(await sendToggleStop(true));

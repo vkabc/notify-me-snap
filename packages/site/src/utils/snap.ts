@@ -55,25 +55,33 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
  */
 
 export const sendHello = async (threshold: string) => {
-    await window.ethereum.request({
-      method: 'wallet_invokeSnap',
-      params: {
-        snapId: defaultSnapOrigin, request: { method: 'hello', params: {to: threshold} },
-      },
-    });
-    ;
-  }
-;
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: { method: 'hello', params: { to: threshold } },
+    },
+  });
+};
 
 export const sendToggleStop = async (toggleStop?: boolean) => {
+  if (toggleStop) {
     return await window.ethereum.request({
       method: 'wallet_invokeSnap',
       params: {
-        snapId: defaultSnapOrigin, request: { method: 'toggle_stop', params: {to: toggleStop} },
+        snapId: defaultSnapOrigin,
+        request: { method: 'toggle_stop', params: { to: toggleStop } },
       },
     });
-    ;
   }
-;
+    return await window.ethereum.request({
+      method: 'wallet_invokeSnap',
+      params: {
+        snapId: defaultSnapOrigin,
+        request: { method: 'toggle_stop' },
+      },
+    });
+
+};
 
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
