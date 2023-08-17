@@ -1,4 +1,5 @@
 import { getLocalStorage, setLocalStorage } from './localStorage';
+import { sendToggleStop } from './snap';
 
 /**
  * Get the user's preferred theme in local storage.
@@ -24,4 +25,14 @@ export const getThemePreference = () => {
   }
 
   return preference === 'dark';
+};
+
+export const getStopLossToggle = async () => {
+  const currentState = await sendToggleStop();
+  console.log(currentState)
+  if("stop" in currentState && currentState["stop"] === true) {
+    return true;
+  }
+  console.log('asd')
+  return false;
 };

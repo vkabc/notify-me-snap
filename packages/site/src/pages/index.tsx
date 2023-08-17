@@ -1,10 +1,12 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
-  getSnap,
+  getSnap, getStopLossToggle,
+  getThemePreference,
   sendHello,
+  sendToggleStop,
   shouldDisplayReconnectButton,
 } from '../utils';
 import {
@@ -13,6 +15,8 @@ import {
   ReconnectButton,
   SendHelloButton,
   Card,
+  Toggle,
+  ToggleGeneric,
 } from '../components';
 import { InputPlaceholder } from '../components/Input';
 
@@ -23,6 +27,7 @@ const Container = styled.div`
   flex: 1;
   margin-top: 7.6rem;
   margin-bottom: 7.6rem;
+
   ${({ theme }) => theme.mediaQueries.small} {
     padding-left: 2.4rem;
     padding-right: 2.4rem;
@@ -47,6 +52,7 @@ const Subtitle = styled.p`
   font-weight: 500;
   margin-top: 0;
   margin-bottom: 0;
+
   ${({ theme }) => theme.mediaQueries.small} {
     font-size: ${({ theme }) => theme.fontSizes.text};
   }
@@ -76,6 +82,7 @@ const Notice = styled.div`
   & > * {
     margin: 0;
   }
+
   ${({ theme }) => theme.mediaQueries.small} {
     margin-top: 1.2rem;
     padding: 1.6rem;
@@ -92,6 +99,7 @@ const ErrorMessage = styled.div`
   margin-top: 2.4rem;
   max-width: 60rem;
   width: 100%;
+
   ${({ theme }) => theme.mediaQueries.small} {
     padding: 1.6rem;
     margin-bottom: 1.2rem;
@@ -102,6 +110,7 @@ const ErrorMessage = styled.div`
 
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
+
 
   const handleConnectClick = async () => {
     try {
@@ -122,8 +131,8 @@ const Index = () => {
     threshold: '',
   });
   const sendData = (data) => {
-    setData(data)
-  }
+    setData(data);
+  };
 
   const handleSendHelloClick = async () => {
     try {
@@ -134,15 +143,15 @@ const Index = () => {
     }
   };
 
-
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        <Span>Notify Me</Span>
       </Heading>
       <Subtitle>
-        Get started by editing <code>src/index.ts</code>
+        Get started by clicking <code>Install MetaMask Flask</code>
       </Subtitle>
+      Notify Me is a snap extension that allows crypto holders to be alerted when a token reaches a certain price.
       <CardContainer>
         {state.error && (
           <ErrorMessage>
@@ -154,7 +163,7 @@ const Index = () => {
             content={{
               title: 'Install',
               description:
-                'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
+                'Notify Me allows crypto holders to be alerted when a token reaches a certain price.',
               button: <InstallFlaskButton />,
             }}
             fullWidth
@@ -194,16 +203,28 @@ const Index = () => {
         )}
         <Card
           content={{
-            title: 'Send Hello message',
+            title: 'Stop Loss',
             description:
-              'Display a custom message within a confirmation screen in MetaMask.',
+              'When the price of a token drops below a certain threshold (1482), you will be notified.',
             button: (
               <SendHelloButton
                 onClick={handleSendHelloClick}
                 disabled={!state.installedSnap}
               />
             ),
-            input: <InputPlaceholder setThreshold={sendData}/>,
+            input: <InputPlaceholder setThreshold={sendData} />,
+            toggle: (
+              <ToggleGeneric
+                onToggle={async () => {
+                  try {
+                     console.log(await sendToggleStop(true));
+                  } catch (e) {
+                    console.error(e);
+                    dispatch({ type: MetamaskActions.SetError, payload: e });
+                  }
+                }}
+              />
+            ),
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -214,10 +235,8 @@ const Index = () => {
         />
         <Notice>
           <p>
-            Please note that the <b>snap.manifest.json</b> and{' '}
-            <b>package.json</b> must be located in the server root directory and
-            the bundle must be hosted at the location specified by the location
-            field.
+            Please note that this is a proof of concept and is not meant to be{' '}
+            <b>production ready </b>
           </p>
         </Notice>
       </CardContainer>

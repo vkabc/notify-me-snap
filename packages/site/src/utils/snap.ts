@@ -55,11 +55,21 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
  */
 
 export const sendHello = async (threshold: string) => {
-  console.log(threshold)
     await window.ethereum.request({
       method: 'wallet_invokeSnap',
       params: {
         snapId: defaultSnapOrigin, request: { method: 'hello', params: {to: threshold} },
+      },
+    });
+    ;
+  }
+;
+
+export const sendToggleStop = async (toggleStop?: boolean) => {
+    return await window.ethereum.request({
+      method: 'wallet_invokeSnap',
+      params: {
+        snapId: defaultSnapOrigin, request: { method: 'toggle_stop', params: {to: toggleStop} },
       },
     });
     ;

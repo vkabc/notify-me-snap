@@ -12,15 +12,15 @@ type CardProps = {
 };
 const Input = styled.input<{ $inputColor?: string; }>`
   padding: 0.5em;
-  margin: 0.5em;
-  color: ${props => props.$inputColor || 'gray'};
+  margin-bottom: 2em;
+  color: ${props => props.$inputColor || 'black'};
   border-radius: 3px;
 `;
 
 export const InputPlaceholder = (props) => {
   return (
     <div>
-      <Input placeholder="1000" onChange={(e) => props.setThreshold({threshold: e.target.value})}  type='text' />
+      <Input placeholder="alert when < " onChange={(e) => props.setThreshold({threshold: e.target.value})}  type='text' />
     </div>
   );
 };

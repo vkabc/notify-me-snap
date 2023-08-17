@@ -22,7 +22,6 @@ import type { OnCronjobHandler } from '@metamask/snaps-types';
 
 import type { FetchParams } from './types';
 
-
 /**
  * Handle cronjob execution requests from MetaMask. This handler handles one
  * method:
@@ -38,7 +37,6 @@ import type { FetchParams } from './types';
  * @see https://docs.metamask.io/snaps/reference/exports/#oncronjob
  */
 
-
 /**
  * Fetch a JSON file from the provided URL. This uses the standard `fetch`
  * function to get the JSON data. Because of CORS, the server must respond with
@@ -53,18 +51,78 @@ import type { FetchParams } from './types';
  * @returns There response as JSON.
  * @throws If the provided URL is not a JSON document.
  */
+
+const notify = (message: string) => {
+  snap.request({
+    method: 'snap_notify',
+    params: {
+      type: 'native',
+      message: message,
+    },
+  });
+
+  snap.request({
+    method: 'snap_notify',
+    params: {
+      type: 'inApp',
+      message: message,
+    },
+  });
+};
+
 async function getJson() {
-  const response = await fetch('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR');
+  const response = await fetch(
+    'https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR',
+  );
   return await response.json();
 }
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
+  const currentState = await snap.request({
+    method: 'snap_manageState',
+    params: { operation: 'get' },
+  });
   switch (request.method) {
     case 'hello': {
-
       await snap.request({
         method: 'snap_manageState',
-        params: { operation: 'update', newState: { threshold: request.params.to } },
+        params: {
+          operation: 'update',
+          newState: { ...currentState, threshold: request.params.to },
+        },
+      });
+
+      notify(`threshold set to $${request.params.to}`);
+      break;
+    }
+
+    case 'toggle_stop': {
+      if (request.params.to) {
+        if ('stop' in currentState && currentState.stop) {
+          await snap.request({
+            method: 'snap_manageState',
+            params: {
+              operation: 'update',
+              newState: { ...currentState, stop: false },
+            },
+          });
+          notify('Stopped monitoring for stop loss ⛔');
+        } else {
+          await snap.request({
+            method: 'snap_manageState',
+            params: {
+              operation: 'update',
+              newState: { ...currentState, stop: true },
+            },
+          });
+
+          notify('Started monitoring for stop loss ✅');
+        }
+      }
+
+      return await snap.request({
+        method: 'snap_manageState',
+        params: { operation: 'get' },
       });
       break;
     }
@@ -83,33 +141,26 @@ export const onCronjob: OnCronjobHandler = async ({ request }) => {
     case 'execute':
       // At a later time, get the data stored.
 
-     const data = await snap.request({
+      const data = await snap.request({
         method: 'snap_manageState',
         params: { operation: 'get' },
       });
-     if("threshold" in data){
-       return snap.request({
-           method: 'snap_notify',
-           params: {
-             type: 'native',
-             message: `threshold is ${data.threshold}`,
-           },
+      // If the stop flag is not set or stop is false, return.
+      if (!('stop' in data) || ('stop' in data && !data.stop)) {
+        return;
+      }
 
-         },
-       );
-     }
-     else{
-        return snap.request({
-            method: 'snap_notify',
-            params: {
-              type: 'native',
-              message: `no threshold set`,
-            },
+      if ('threshold' in data && data.threshold) {
+        const price: number = (await getJson('')).USD;
+        if (parseFloat(price) < parseFloat(data.threshold)) {
+          const message: string = `Price $${price.toString()} below $${data.threshold.toString()}`;
 
-          },
-        );
-     }
-
+          notify(message);
+        }
+      } else {
+        notify('threshold not set');
+      }
+      break;
 
     default:
       throw new Error('Method not found.');
