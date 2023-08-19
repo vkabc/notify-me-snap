@@ -13,6 +13,7 @@ export type MetamaskState = {
   isFlask: boolean;
   installedSnap?: Snap;
   error?: Error;
+  info?: { message: string };
 };
 
 const initialState: MetamaskState = {
@@ -35,6 +36,7 @@ export enum MetamaskActions {
   SetInstalled = 'SetInstalled',
   SetFlaskDetected = 'SetFlaskDetected',
   SetError = 'SetError',
+  SetInfo = 'SetInfo',
 }
 
 const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
@@ -55,6 +57,12 @@ const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
       return {
         ...state,
         error: action.payload,
+      };
+
+    case MetamaskActions.SetInfo:
+      return {
+        ...state,
+        info: action.payload,
       };
 
     default:
@@ -110,7 +118,16 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
           type: MetamaskActions.SetError,
           payload: undefined,
         });
-      }, 10000);
+      }, 5000);
+    }
+
+    if (state.info) {
+      timeoutId = window.setTimeout(() => {
+        dispatch({
+          type: MetamaskActions.SetInfo,
+          payload: undefined,
+        });
+      }, 5000);
     }
 
     return () => {
@@ -118,7 +135,7 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [state.error]);
+  }, [state.error, state.info]);
 
   return (
     <MetaMaskContext.Provider value={[state, dispatch]}>

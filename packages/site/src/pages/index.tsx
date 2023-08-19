@@ -51,7 +51,7 @@ const Subtitle = styled.p`
   font-size: ${({ theme }) => theme.fontSizes.large};
   font-weight: 500;
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 2rem;
 
   ${({ theme }) => theme.mediaQueries.small} {
     font-size: ${({ theme }) => theme.fontSizes.text};
@@ -108,6 +108,25 @@ const ErrorMessage = styled.div`
   }
 `;
 
+const InfoMessage = styled.div`
+  background-color: ${({ theme }) => theme.colors.background.default};
+  border: 1px solid ${({ theme }) => theme.colors.success.default};
+  color: ${({ theme }) => theme.colors.success.default};
+  border-radius: ${({ theme }) => theme.radii.default};
+  padding: 2.4rem;
+  margin-bottom: 2.4rem;
+  margin-top: 2.4rem;
+  max-width: 60rem;
+  width: 100%;
+
+  ${({ theme }) => theme.mediaQueries.small} {
+    padding: 1.6rem;
+    margin-bottom: 1.2rem;
+    margin-top: 1.2rem;
+    max-width: 100%;
+  }
+`;
+
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
@@ -134,9 +153,19 @@ const Index = () => {
     setData(data);
   };
 
+  const containsOnlyNumbers = (str) => /\d+(\.\d+)*$/.test(str);
   const handleSendHelloClick = async () => {
     try {
-      await sendHello(data.threshold);
+      if (!data.threshold || !containsOnlyNumbers(data.threshold)) {
+        dispatch({
+          type: MetamaskActions.SetError,
+          payload: { message: 'Please enter a valid threhsold (eg: 1232.2)' },
+        });
+        return
+      }
+       sendHello(data.threshold);
+
+      dispatch({ type: MetamaskActions.SetInfo, payload: {message: `Stop Loss has been Set to $${  data.threshold}!`} });
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -148,22 +177,28 @@ const Index = () => {
       <Heading>
         <Span>Notify Me</Span>
       </Heading>
-      <Subtitle>
+      {!state.installedSnap && <Subtitle>
         Get started by clicking <code>Install MetaMask Flask</code>
-      </Subtitle>
-      Notify Me is a snap extension that allows crypto holders to be alerted when a token reaches a certain price.
+      </Subtitle> }
+      Notify Me is a snap extension that allows crypto holders to be alerted when a token price has crashed.
       <CardContainer>
         {state.error && (
           <ErrorMessage>
             <b>An error happened:</b> {state.error.message}
           </ErrorMessage>
         )}
+
+        {state.info && (
+          <InfoMessage>
+            <b>Info Message:</b> {state.info.message}
+          </InfoMessage>
+        )}
         {!state.isFlask && (
           <Card
             content={{
               title: 'Install',
               description:
-                'Notify Me allows crypto holders to be alerted when a token reaches a certain price.',
+                'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
               button: <InstallFlaskButton />,
             }}
             fullWidth
@@ -205,7 +240,7 @@ const Index = () => {
           content={{
             title: 'Stop Loss',
             description:
-              'When the price of a token drops below a certain threshold (1482), you will be notified.',
+              'When the price of ethereum drops below a certain threshold (eg: $2000), you will be notified.',
             button: (
               <SendHelloButton
                 onClick={handleSendHelloClick}
@@ -218,7 +253,8 @@ const Index = () => {
                 shouldLoad={state.installedSnap}
                 onToggle={async () => {
                   try {
-                     console.log(await sendToggleStop(true));
+                     const data = await sendToggleStop(true);
+                    dispatch({ type: MetamaskActions.SetInfo, payload: { message: data.stop?'Stop Loss Alert is Turned On!': 'Stop Loss ALert is Turned Off!' } });
                   } catch (e) {
                     console.error(e);
                     dispatch({ type: MetamaskActions.SetError, payload: e });

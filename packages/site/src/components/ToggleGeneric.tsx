@@ -94,15 +94,17 @@ const ToggleCircle = styled.div<CheckedProps>`
 export const ToggleGeneric = ({
   onToggle,
   defaultChecked = false,
-  shouldLoad = false,
+  shouldLoad ,
 }: {
   onToggle(): void;
   defaultChecked?: boolean;
+  shouldLoad: boolean;
 }) => {
   useEffect(() => {
 
 
     const f = async () => {
+      console.log(shouldLoad)
 
       if(shouldLoad) {
         const currentStop = await getStopLossToggle();
@@ -112,7 +114,7 @@ export const ToggleGeneric = ({
     }
     f();
 
-  }, []);
+  }, [shouldLoad]);
   const [checked, setChecked] = useState(defaultChecked);
 
   const handleChange = () => {

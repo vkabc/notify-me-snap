@@ -70,6 +70,16 @@ const notify = (message: string) => {
   });
 };
 
+const notifyInApp = (message: string) => {
+  snap.request({
+    method: 'snap_notify',
+    params: {
+      type: 'inApp',
+      message: message,
+    },
+  });
+};
+
 async function getJson() {
   const response = await fetch(
     'https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR',
@@ -92,9 +102,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
         },
       });
 
-      notify(`threshold set to $${request.params.to}`);
+      notifyInApp(`threshold set to $${request.params.to}`);
       break;
     }
+
 
     case 'toggle_stop': {
       if (request.params.to) {
@@ -106,7 +117,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
               newState: { ...currentState, stop: false },
             },
           });
-          notify('Stopped monitoring for stop loss ⛔');
+          notifyInApp('Stopped monitoring for stop loss ⛔');
         } else {
           await snap.request({
             method: 'snap_manageState',
@@ -116,7 +127,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ request }) => {
             },
           });
 
-          notify('Started monitoring for stop loss ✅');
+          notifyInApp('Started monitoring for stop loss ✅');
         }
       }
 

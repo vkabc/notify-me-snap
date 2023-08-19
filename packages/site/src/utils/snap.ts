@@ -78,7 +78,7 @@ export const sendToggleStop = async (toggleStop?: boolean) => {
       method: 'wallet_invokeSnap',
       params: {
         snapId: defaultSnapOrigin,
-        request: { method: 'toggle_stop' },
+        request: { method: 'toggle_stop', params: {} },
       },
     });
 
