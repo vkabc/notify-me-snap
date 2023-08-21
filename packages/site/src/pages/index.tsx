@@ -250,7 +250,7 @@ const Index = () => {
             input: <InputPlaceholder setThreshold={sendData} />,
             toggle: (
               <ToggleGeneric
-                shouldLoad={state.installedSnap}
+                shouldLoad={typeof state.installedSnap === "boolean" ? state.installedSnap : false }
                 onToggle={async () => {
                   try {
                      const data = await sendToggleStop(true);
