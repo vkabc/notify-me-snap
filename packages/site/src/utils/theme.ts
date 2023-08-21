@@ -29,10 +29,9 @@ export const getThemePreference = () => {
 
 export const getStopLossToggle = async () => {
   const currentState = await sendToggleStop();
-  console.log(currentState)
+  if(!currentState) {return false;}
   if("stop" in currentState && currentState["stop"] === true) {
     return true;
   }
-  console.log('asd')
   return false;
 };
